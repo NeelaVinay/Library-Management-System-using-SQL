@@ -277,39 +277,52 @@ Write a query to update the status of books in the books table to "Yes" when the
 
 ```sql
 
-CREATE OR REPLACE PROCEDURE add_return_records(p_return_id VARCHAR(10), p_issued_id VARCHAR(10), p_book_quality VARCHAR(10))
-LANGUAGE plpgsql
-AS $$
+DELIMITER $$
 
-DECLARE
-    v_isbn VARCHAR(50);
-    v_book_name VARCHAR(80);
-    
+CREATE PROCEDURE add_return_records (
+    IN p_return_id VARCHAR(10),
+    IN p_issued_id VARCHAR(10),
+    IN p_book_quality VARCHAR(10)
+)
 BEGIN
-    -- all your logic and code
-    -- inserting into returns based on users input
-    INSERT INTO return_status(return_id, issued_id, return_date, book_quality)
-    VALUES
-    (p_return_id, p_issued_id, CURRENT_DATE, p_book_quality);
+    DECLARE v_isbn VARCHAR(50);
+    DECLARE v_book_name VARCHAR(80);
 
-    SELECT 
+    -- Insert into return_status
+    INSERT INTO return_status (
+        return_id,
+        issued_id,
+        return_date,
+        book_quality
+    )
+    VALUES (
+        p_return_id,
+        p_issued_id,
+        CURDATE(),
+        p_book_quality
+    );
+
+    -- Fetch book details
+    SELECT
         issued_book_isbn,
         issued_book_name
-        INTO
+    INTO
         v_isbn,
         v_book_name
     FROM issued_status
     WHERE issued_id = p_issued_id;
 
+    -- Update book status
     UPDATE books
     SET status = 'yes'
     WHERE isbn = v_isbn;
 
-    RAISE NOTICE 'Thank you for returning the book: %', v_book_name;
-    
-END;
-$$
+    -- MySQL replacement for RAISE NOTICE
+    SELECT CONCAT('Thank you for returning the book: ', v_book_name) AS message;
 
+END$$
+
+DELIMITER ;
 
 -- Testing FUNCTION add_return_records
 
