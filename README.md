@@ -4,11 +4,10 @@
 
 **Project Title**: Library Management System  
 **Level**: Intermediate  
-**Database**: `library_db`
 
 This project demonstrates the implementation of a Library Management System using SQL. It includes creating and managing tables, performing CRUD operations, and executing advanced SQL queries. The goal is to showcase skills in database design, manipulation, and querying.
 
-![Library_project](https://github.com/najirh/Library-System-Management---P2/blob/main/library.jpg)
+![Library_project](https://github.com/NeelaVinay/Library-Management-System-using-SQL/blob/main/library.jpg)
 
 ## Objectives
 
@@ -20,13 +19,12 @@ This project demonstrates the implementation of a Library Management System usin
 ## Project Structure
 
 ### 1. Database Setup
-![ERD](https://github.com/najirh/Library-System-Management---P2/blob/main/library_erd.png)
 
 - **Database Creation**: Created a database named `library_db`.
 - **Table Creation**: Created tables for branches, employees, members, books, issued status, and return status. Each table includes relevant columns and relationships.
 
 ```sql
-CREATE DATABASE library_db;
+CREATE DATABASE library;
 
 DROP TABLE IF EXISTS branch;
 CREATE TABLE branch
@@ -121,15 +119,16 @@ CREATE TABLE return_status
 
 ```sql
 INSERT INTO books(isbn, book_title, category, rental_price, status, author, publisher)
-VALUES('978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.');
+VALUES ('978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.');
 SELECT * FROM books;
 ```
 **Task 2: Update an Existing Member's Address**
 
 ```sql
 UPDATE members
-SET member_address = '125 Oak St'
-WHERE member_id = 'C103';
+SET member_address = '125 Main St'
+WHERE member_id = 'C101';
+SELECT * FROM members;
 ```
 
 **Task 3: Delete a Record from the Issued Status Table**
@@ -341,7 +340,7 @@ CALL add_return_records('RS148', 'IS140', 'Good');
 Create a query that generates a performance report for each branch, showing the number of books issued, the number of books returned, and the total revenue generated from book rentals.
 
 ```sql
-CREATE TABLE branch_reports
+CREATE TABLE branch_reports1
 AS
 SELECT 
     b.branch_id,
@@ -364,7 +363,8 @@ books as bk
 ON ist.issued_book_isbn = bk.isbn
 GROUP BY 1, 2;
 
-SELECT * FROM branch_reports;
+
+SELECT * FROM branch_reports1;
 ```
 
 **Task 16: CTAS: Create a Table of Active Members**  
@@ -372,16 +372,14 @@ Use the CREATE TABLE AS (CTAS) statement to create a new table active_members co
 
 ```sql
 
-CREATE TABLE active_members
-AS
-SELECT * FROM members
-WHERE member_id IN (SELECT 
-                        DISTINCT issued_member_id   
-                    FROM issued_status
-                    WHERE 
-                        issued_date >= CURRENT_DATE - INTERVAL '2 month'
-                    )
-;
+CREATE TABLE active_members AS
+SELECT *
+FROM members
+WHERE member_id IN (
+    SELECT DISTINCT issued_member_id
+    FROM issued_status
+    WHERE issued_date >= CURDATE() - INTERVAL 2 MONTH
+);
 
 SELECT * FROM active_members;
 
@@ -403,7 +401,7 @@ ON e.emp_id = ist.issued_emp_id
 JOIN
 branch as b
 ON e.branch_id = b.branch_id
-GROUP BY 1, 2
+GROUP BY 1, 2;
 ```
 
 **Task 18: Identify Members Issuing High-Risk Books**  
@@ -422,42 +420,61 @@ If the book is not available (status = 'no'), the procedure should return an err
 
 ```sql
 
-CREATE OR REPLACE PROCEDURE issue_book(p_issued_id VARCHAR(10), p_issued_member_id VARCHAR(30), p_issued_book_isbn VARCHAR(30), p_issued_emp_id VARCHAR(10))
-LANGUAGE plpgsql
-AS $$
+DELIMITER $$
 
-DECLARE
--- all the variabable
-    v_status VARCHAR(10);
-
+CREATE PROCEDURE issue_book (
+    IN p_issued_id VARCHAR(10),
+    IN p_issued_member_id VARCHAR(30),
+    IN p_issued_book_isbn VARCHAR(30),
+    IN p_issued_emp_id VARCHAR(10)
+)
 BEGIN
--- all the code
-    -- checking if book is available 'yes'
-    SELECT 
-        status 
-        INTO
-        v_status
+    DECLARE v_status VARCHAR(10);
+
+    -- Get book status
+    SELECT status
+    INTO v_status
     FROM books
     WHERE isbn = p_issued_book_isbn;
 
     IF v_status = 'yes' THEN
 
-        INSERT INTO issued_status(issued_id, issued_member_id, issued_date, issued_book_isbn, issued_emp_id)
-        VALUES
-        (p_issued_id, p_issued_member_id, CURRENT_DATE, p_issued_book_isbn, p_issued_emp_id);
+        INSERT INTO issued_status (
+            issued_id,
+            issued_member_id,
+            issued_date,
+            issued_book_isbn,
+            issued_emp_id
+        )
+        VALUES (
+            p_issued_id,
+            p_issued_member_id,
+            CURDATE(),
+            p_issued_book_isbn,
+            p_issued_emp_id
+        );
 
         UPDATE books
-            SET status = 'no'
+        SET status = 'no'
         WHERE isbn = p_issued_book_isbn;
 
-        RAISE NOTICE 'Book records added successfully for book isbn : %', p_issued_book_isbn;
-
+        -- MySQL replacement for RAISE NOTICE
+        SELECT CONCAT(
+            'Book records added successfully for book isbn : ',
+            p_issued_book_isbn
+        ) AS message;
 
     ELSE
-        RAISE NOTICE 'Sorry to inform you the book you have requested is unavailable book_isbn: %', p_issued_book_isbn;
+        SELECT CONCAT(
+            'Sorry to inform you the book you have requested is unavailable book_isbn: ',
+            p_issued_book_isbn
+        ) AS message;
     END IF;
-END;
-$$
+
+END$$
+
+DELIMITER ;
+
 
 -- Testing The function
 SELECT * FROM books;
@@ -503,20 +520,12 @@ This project demonstrates the application of SQL skills in creating and managing
 
 1. **Clone the Repository**: Clone this repository to your local machine.
    ```sh
-   git clone https://github.com/najirh/Library-System-Management---P2.git
+   git clone https://github.com/NeelaVinay/Library-Management-System-using-SQL
    ```
 
 2. **Set Up the Database**: Execute the SQL scripts in the `database_setup.sql` file to create and populate the database.
 3. **Run the Queries**: Use the SQL queries in the `analysis_queries.sql` file to perform the analysis.
 4. **Explore and Modify**: Customize the queries as needed to explore different aspects of the data or answer additional questions.
 
-## Author - Zero Analyst
-
-This project showcases SQL skills essential for database management and analysis. For more content on SQL and data analysis, connect with me through the following channels:
-
-- **YouTube**: [Subscribe to my channel for tutorials and insights](https://www.youtube.com/@zero_analyst)
-- **Instagram**: [Follow me for daily tips and updates](https://www.instagram.com/zero_analyst/)
-- **LinkedIn**: [Connect with me professionally](https://www.linkedin.com/in/najirr)
-- **Discord**: [Join our community for learning and collaboration](https://discord.gg/36h5f2Z5PK)
 
 Thank you for your interest in this project!
