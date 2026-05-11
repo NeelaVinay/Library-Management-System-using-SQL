@@ -113,8 +113,6 @@ branch ──< employees >──< issued_status >──< books
 ├── app_library.sql              # Schema DDL — all 6 tables
 ├── insert_queries.sql           # Seed data inserts
 ├── insert_queries2.sql          # Additional inserts + ALTER TABLE
-├── solutions_1.sql              # Tasks 1–12 (CRUD + Data Analysis)
-├── lms_project_advanced_solution_2.sql  # Tasks 13–20 (Advanced SQL)
 ├── lms_complete_analysis.sql    # FULL consolidated script (all tasks + BI queries)
 ├── books.csv                    # 35 book records
 ├── branch.csv                   # 5 branch records
